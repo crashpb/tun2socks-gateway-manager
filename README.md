@@ -3,7 +3,7 @@
 
 ## 1. The Goal
 To run multiple SOCKS5 gateways on a single Linux VM, allowing different clients on the LAN to use different proxies (Waydroid, External, etc.) transparently, supporting both TCP and UDP.
-The main motivator was to use bleeding unsupported VPN protocols in any firewall applience, after the proxies has been setup properly they can be used by your firewall of choice as a gateway to then be used in your routing rules.
+The main motivation for creating this project was to enable the use of unsupported VPN protocols on any firewall appliance. Once the proxies are set up properly, they can be used by your firewall of choice as an upstream gateway and referenced in routing rules.
 
 ## 2. The Architecture
 We utilize **Policy Based Routing (PBR)**. Traffic is routed to specific tunnels based on which physical interface it enters, or which client IP sent it.
@@ -40,3 +40,4 @@ Config files are located in `/opt/tun2socks/conf/NAME.conf`.
 * **Clients can't reach Gateway?** Likely "ARP Flux". The script automatically sets `arp_ignore=1`. Try clearing client ARP cache.
 
 * **Service Fails?** Check logs: `journalctl -u tun2socks@NAME -f`
+
