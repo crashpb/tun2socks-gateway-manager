@@ -1,0 +1,15 @@
+[Unit]
+Description=Tun2Socks Gateway [%i]
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/tun2socks
+ExecStart=/opt/tun2socks/scripts/core.sh %i start
+ExecStop=/opt/tun2socks/scripts/core.sh %i stop
+Restart=always
+RestartSec=3
+KillMode=process
+
+[Install]
+WantedBy=multi-user.target
