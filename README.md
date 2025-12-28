@@ -1,43 +1,113 @@
-# Tun2Socks Multi-Gateway Manager
-**Documentation & Configuration Reference**
+Tun2Socks Gateway Manager
+=========================
 
-## 1. The Goal
-To run multiple SOCKS5 gateways on a single Linux VM, allowing different clients on the LAN to use different proxies (Waydroid, External, etc.) transparently, supporting both TCP and UDP.
+A Bash-based wrapper for managing multiple Tun2Socks instances on a single Linux host. It utilizes Policy Based Routing (PBR) and SystemD to manage transparent SOCKS5 tunneling for specific interfaces or clients.
 The main motivation for creating this project was to enable the use of unsupported VPN protocols on any firewall appliance. Once the proxies are set up properly, they can be used by your firewall of choice as an upstream gateway and referenced in routing rules.
 
-## 2. The Architecture
-We utilize **Policy Based Routing (PBR)**. Traffic is routed to specific tunnels based on which physical interface it enters, or which client IP sent it.
+Features
+--------
 
-## 3. Configuration Reference
-Config files are located in `/opt/tun2socks/conf/NAME.conf`.
+* **Policy Based Routing:** Routes traffic to tunnels based on source IP or ingress interface.
+* **Multi-Gateway Support:** Run multiple isolated instances simultaneously.
+* **SystemD Integration:** Standard service management (``systemctl start/stop/enable``).
+* **ARP Flux Mitigation:** Automatically applies kernel parameters to prevent ARP issues on multi-homed VMs.
 
-### Required Variables
-| Variable | Description | Example |
-| :--- | :--- | :--- |
-| `PHY_IF` | The Physical Network Interface to bind to. | `ens192`, `ens224` |
-| `PROXY_URL` | The upstream proxy URL. Supports socks5/http. | `socks5://192.168.1.50:1080` |
+Prerequisites
+-------------
 
-### Optional Variables
-| Variable | Description | Example |
-| :--- | :--- | :--- |
-| `GATEWAY_IP` | Adds this IP as an alias to the interface. | `10.1.0.5` |
-| `CLIENT_IP` | **(Mode B Only)** If set, filters by Source IP. | `10.1.0.55` |
-| `LAN_NET` | Manually define LAN subnet if auto-detection fails. | `10.1.0.0/24` |
+* **OS:** Linux (Tested on Linux Mint 21 / Ubuntu 22.04 LTS, Kernel 5.15+)
+* **Dependencies:** ``iproute2``, ``iptables``, ``curl``/``wget``.
+* **Core Binary:** This wrapper requires ``tun2socks``.
+    * Download ``tun2socks-linux-amd64`` from the official repository: `xjasonlyu/tun2socks <https://github.com/xjasonlyu/tun2socks>`_.
 
-## 4. Operation Modes
+Installation
+------------
 
-### Mode A: Dedicated Interface (Recommended)
-**Use this if:** You have a dedicated Virtual NIC (e.g., `ens224`).
-* **Config:** `PHY_IF=ens224`, `CLIENT_IP` is empty.
-* **Logic:** All traffic on this interface goes to the tunnel.
+1. Clone the repository::
 
-### Mode B: Shared Interface (Source Routing)
-**Use this if:** You only have one NIC (`ens192`) but need multiple gateways.
-* **Config:** `PHY_IF=ens192`, `CLIENT_IP=10.1.0.55`.
-* **Logic:** Only traffic FROM `CLIENT_IP` goes to the tunnel.
+    git clone https://github.com/crashpb/tun2socks-gateway-manager.git
+    cd tun2socks-manager
 
-## 5. Troubleshooting
-* **Clients can't reach Gateway?** Likely "ARP Flux". The script automatically sets `arp_ignore=1`. Try clearing client ARP cache.
+2. Run the installer::
 
-* **Service Fails?** Check logs: `journalctl -u tun2socks@NAME -f`
+    sudo ./install.sh
 
+3. Install the binary::
+
+    # Download the release matching your architecture and place it in bin/
+    sudo cp tun2socks-linux-amd64 /opt/tun2socks/bin/tun2socks-current
+    sudo chmod +x /opt/tun2socks/bin/tun2socks-current
+
+Configuration
+-------------
+
+Configuration files are stored in ``/opt/tun2socks/conf/``. Files should be named ``<instance_name>.conf``.
+
+Configuration Variables
+~~~~~~~~~~~~~~~~~~~~~~~
+
+**PHY_IF** (Required)
+    The physical network interface to bind (e.g., ``ens192``).
+
+**PROXY_URL** (Required)
+    Upstream proxy URL (e.g., ``socks5://192.168.1.50:1080``).
+
+**GATEWAY_IP** (Optional)
+    Adds a secondary IP alias to the interface.
+
+**CLIENT_IP** (Optional)
+    If set, enables Source Routing mode (filters by source IP).
+
+**LAN_NET** (Optional)
+    Manually defines LAN subnet if auto-detection fails.
+
+Routing Modes
+-------------
+
+1. Dedicated Interface Mode (Recommended)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Used when the VM has a dedicated virtual NIC (e.g., ``ens224``) for the gateway. All traffic entering this interface is routed to the tunnel.
+
+.. code:: ini
+
+    PHY_IF=ens224
+    GATEWAY_IP=10.1.0.5
+    PROXY_URL=socks5://192.168.240.112:10808
+    # CLIENT_IP is undefined
+
+2. Source Routing Mode (Shared Interface)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Used when a single NIC (e.g., ``ens192``) handles multiple gateways. Routing is filtered by the source IP of the client.
+
+.. code:: ini
+
+    PHY_IF=ens192
+    GATEWAY_IP=10.1.0.5
+    CLIENT_IP=10.1.0.55
+    PROXY_URL=socks5://192.168.240.112:10808
+
+Usage
+-----
+
+Manage Instances::
+
+    # Start an instance named 'ps5' (reads conf/ps5.conf)
+    sudo t2s start ps5
+
+    # Stop an instance
+    sudo t2s stop ps5
+
+    # View status of all instances
+    sudo t2s status
+
+Enable on Boot::
+
+    sudo systemctl enable tun2socks@ps5
+
+Troubleshooting
+---------------
+
+* **Logs:** ``journalctl -u tun2socks@<name> -f``
+* **Connectivity:** If clients cannot connect, clear the client's ARP cache (``arp -d *`` or ``ip neigh flush all``). The script automatically sets ``arp_ignore=1`` to prevent ARP flux.
