@@ -1,7 +1,7 @@
 #!/bin/bash
-# Path: /opt/tun2socks/scripts/core.sh
+# Path: /opt/tun2socks-gateway-manager/scripts/core.sh
 
-BASE_DIR="/opt/tun2socks"
+BASE_DIR="/opt/tun2socks-gateway-manager"
 INSTANCE_NAME=$1
 ACTION=${2:-start}
 
@@ -137,4 +137,5 @@ elif [ "$ACTION" == "stop" ]; then
 
     rm "$ID_FILE"
     echo "    [OK] Stopped."
+
 fi
