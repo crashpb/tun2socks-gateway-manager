@@ -1,5 +1,5 @@
 #!/bin/bash
-CONF_DIR="/opt/tun2socks/conf"
+CONF_DIR="/opt/tun2socks-gateway-manager/conf"
 
 if [ "$EUID" -ne 0 ]; then echo "Root required."; exit 1; fi
 
@@ -35,4 +35,5 @@ case "$1" in
     *)
         echo "Usage: t2s {start|stop|restart|status} [config_name]"
         ;;
+
 esac
