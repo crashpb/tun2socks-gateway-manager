@@ -1,6 +1,6 @@
 #!/bin/bash
 
-INSTALL_DIR="/opt/tun2socks"
+INSTALL_DIR="/opt/tun2socks-gateway-manager"
 BIN_DIR="${INSTALL_DIR}/bin"
 
 if [ "$EUID" -ne 0 ]; then
