@@ -176,3 +176,10 @@ sudo ./bin/icmp_responder \
   -l /tmp/debug_responder.log
   ```
 You can now tail -f /tmp/debug_responder.log to see it calculating latency and replying to pings in real-time.
+
+Manually compile responder:
+---------------
+
+```bash
+gcc -pthread -o /opt/tun2socks-gateway-manager/bin/icmp_responder /opt/tun2socks-gateway-manager/src/icmp_responder.c -lcurl
+```
