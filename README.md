@@ -58,8 +58,10 @@ Installation
 
 3. Install the binary::
 
-    # Download the release matching your architecture and place it in bin/
+ * Download the release matching your architecture and place it in bin/
+
     sudo cp tun2socks-linux-amd64 /opt/tun2socks/bin/tun2socks-current
+
     sudo chmod +x /opt/tun2socks/bin/tun2socks-current
 
 Configuration
